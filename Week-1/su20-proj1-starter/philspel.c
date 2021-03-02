@@ -3,42 +3,42 @@
  */
 #include "hashtable.h"
 
-/*
- * Include the header file.
- */
+ /*
+  * Include the header file.
+  */
 #include "philspel.h"
 
-/*
- * Standard IO and file routines.
- */
+  /*
+   * Standard IO and file routines.
+   */
 #include <stdio.h>
 
-/*
- * General utility routines (including malloc()).
- */
+   /*
+    * General utility routines (including malloc()).
+    */
 #include <stdlib.h>
 
-/*
- * Character utility routines.
- */
+    /*
+     * Character utility routines.
+     */
 #include <ctype.h>
 
-/*
- * String utility routines.
- */
+     /*
+      * String utility routines.
+      */
 #include <string.h>
 
-/*
- * This hash table stores the dictionary.
- */
-HashTable *dictionary;
+      /*
+       * This hash table stores the dictionary.
+       */
+HashTable* dictionary;
 
 /*
  * The MAIN routine.  You can safely print debugging information
- * to standard error (stderr) as shown and it will be ignored in 
+ * to standard error (stderr) as shown and it will be ignored in
  * the grading process.
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   if (argc != 2) {
     fprintf(stderr, "Specify a dictionary\n");
     return 0;
@@ -65,22 +65,39 @@ int main(int argc, char **argv) {
 
 /*
  * This should hash a string to a bucket index.  Void *s can be safely cast
- * to a char * (null terminated string) and is already done for you here 
+ * to a char * (null terminated string) and is already done for you here
  * for convenience.
  */
-unsigned int stringHash(void *s) {
-  char *string = (char *)s;
+unsigned int stringHash(void* s) {
+  char* string = (char*)s;
   // -- TODO --
+
+  unsigned int loc = 0;
+  while (*string != '\0') {
+    loc = (loc << 5) - loc + *string;
+    string++;
+  }
+  return loc;
 }
 
 /*
- * This should return a nonzero value if the two strings are identical 
+ * This should return a nonzero value if the two strings are identical
  * (case sensitive comparison) and 0 otherwise.
  */
-int stringEquals(void *s1, void *s2) {
-  char *string1 = (char *)s1;
-  char *string2 = (char *)s2;
+int stringEquals(void* s1, void* s2) {
+  char* string1 = (char*)s1;
+  char* string2 = (char*)s2;
+
   // -- TODO --
+  if (strcmp(string1, string2) == 0) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
+
+  fprintf(stderr, "stringEquals fails\n");
+  exit(1);
 }
 
 /*
@@ -99,15 +116,48 @@ int stringEquals(void *s1, void *s2) {
  * you can safely use fscanf() to read in the strings until you want to handle
  * arbitrarily long dictionary chacaters.
  */
-void readDictionary(char *dictName) {
+void readDictionary(char* dictName) {
   // -- TODO --
+  FILE* file;
+  if (!(file = fopen(dictName, "r"))) {
+    fprintf(stderr, "Dictionary not found!\n");
+    exit(1);
+  }
+
+  int counter = 0;
+  int maxlength = 60;
+  char* char_of_word = (char*)malloc((maxlength + 1) * sizeof(char));
+  char c;
+
+  while ((c = fgetc(file)) != EOF || counter != 0) {
+    if (c != '\n' && c != EOF) {
+      if (counter >= maxlength) {
+        maxlength *= 2;
+        char_of_word =
+          (char*)realloc(char_of_word, (maxlength + 1) * sizeof(char));
+      }
+
+      char_of_word[counter] = c;
+      counter++;
+    }
+    else {
+      char_of_word[counter] = '\0';
+      insertData(dictionary, char_of_word, char_of_word);
+
+      counter = 0;
+      maxlength = 60;
+      char_of_word = (char*)malloc((maxlength + 1) * sizeof(char));
+    }
+  }
+
+  return;
 }
 
 /*
  * This should process standard input (stdin) and copy it to standard
- * output (stdout) as specified in the spec (e.g., if a standard 
- * dictionary was used and the string "this is a taest of  this-proGram" 
- * was given to stdin, the output to stdout should be 
+ * output (stdout) as specified in the spec (e.g., if a standard
+ * dictionary was used and the string "this is a taest of  this-proGram"
+ * was given to stdin, the output to stdout should be
  * "this is a teast [sic] of  this-proGram").  All words should be checked
  * against the dictionary as they are input, then with all but the first
  * letter converted to lowercase, and finally with all letters converted
@@ -121,9 +171,70 @@ void readDictionary(char *dictName) {
  *
  * Do note that even under the initial assumption that no word is longer than 60
  * characters, you may still encounter strings of non-alphabetic characters (e.g.,
- * numbers and punctuation) which are longer than 60 characters. Again, for the 
+ * numbers and punctuation) which are longer than 60 characters. Again, for the
  * final 20% of your grade, you cannot assume words have a bounded length.
  */
 void processInput() {
   // -- TODO --
+  char c;
+  int counter = 0;
+  int maxlength = 60;
+  char* char_of_word = (char*)malloc((maxlength + 1) * sizeof(char));
+
+  while ((c = fgetc(stdin)) != EOF || counter != 0) {
+    if (isalpha(c)) {
+      if (counter >= maxlength) {
+        maxlength *= 2;
+        char_of_word =
+          realloc(char_of_word, (maxlength + 1) * sizeof(char));
+      }
+
+      char_of_word[counter] = c;
+      counter++;
+    }
+    else {
+      if (counter > 0) {
+        char_of_word[counter] = '\0';
+
+        char* variations1 = (char*)malloc((counter + 1) * sizeof(char));
+        char* variations2 = (char*)malloc((counter + 1) * sizeof(char));
+        for (int i = 0; i < counter; ++i) {
+          if ('A' <= char_of_word[i] && char_of_word[i] <= 'Z') {
+            variations1[i] = 'a' + char_of_word[i] - 'A';
+            variations2[i] = 'a' + char_of_word[i] - 'A';
+          }
+          else {
+            variations1[i] = char_of_word[i];
+            variations2[i] = char_of_word[i];
+          }
+        }
+        variations1[counter] = '\0';
+        variations2[0] = char_of_word[0];
+        variations2[counter] = '\0';
+
+        if (findData(dictionary, char_of_word) != NULL) {
+          printf("%s", char_of_word);
+        }
+        else if (findData(dictionary, variations1) != NULL) {
+          printf("%s", char_of_word);
+        }
+        else if (findData(dictionary, variations2) != NULL) {
+          printf("%s", char_of_word);
+        }
+        else {
+          printf("%s [sic]", char_of_word);
+        }
+        free(char_of_word);
+        free(variations1);
+        free(variations2);
+      }
+
+      if (c != EOF)
+        printf("%c", c);
+      counter = 0;
+      maxlength = 60;
+      char_of_word = (char*)malloc((maxlength + 1) * sizeof(char));
+    }
+  }
+  return;
 }

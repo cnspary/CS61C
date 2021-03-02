@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 typedef struct node {
   int a;
   char b;
@@ -74,5 +75,7 @@ int main () {
   incrementPtr(&p);
   printf("  *p = %d\n", *p);
 
+  int *q = malloc(10 * sizeof(int));
+  q[10] = 0;
   return 0;
 }
