@@ -16,34 +16,33 @@ typedef struct hello {
 } hello;
 
 void incrementPtr(int **p) {
-  printf("before incrementPtr : %p\n", *p);
+  printf("  before incrementPtr : %p\n", *p);
   *p = *p + 1;
-  printf("after  incrementPtr : %p\n", *p);
+  printf("  after  incrementPtr : %p\n", *p);
   return ;
 }
 
-
 int main () {
   printf("type size: \n");
-  printf("  sizeof(long)    = %d\n", sizeof(long));
-  printf("  sizeof(int)     = %d\n", sizeof(int));
-  printf("  sizeof(short)   = %d\n", sizeof(short));
-  printf("  sizeof(float)   = %d\n", sizeof(float));
-  printf("  sizeof(double)  = %d\n", sizeof(double));
-  printf("  sizeof(char)    = %d\n", sizeof(char));
-  printf("  sizeof(pointer) = %d\n", sizeof(node *));
-  printf("  sizeof(node)    = %d\n", sizeof(node));
-  printf("  sizeof(hello)   = %d\n", sizeof(hello));
+  printf("  sizeof(long)    = %ld\n", sizeof(long));
+  printf("  sizeof(int)     = %ld\n", sizeof(int));
+  printf("  sizeof(short)   = %ld\n", sizeof(short));
+  printf("  sizeof(float)   = %ld\n", sizeof(float));
+  printf("  sizeof(double)  = %ld\n", sizeof(double));
+  printf("  sizeof(char)    = %ld\n", sizeof(char));
+  printf("  sizeof(pointer) = %ld\n", sizeof(node *));
+  printf("  sizeof(node)    = %ld\n", sizeof(node));
+  printf("  sizeof(hello)   = %ld\n", sizeof(hello));
 
   printf("\nchar * & char []: \n");
   char *charpointer = "ABC";
   char chararray[] = {'A', 'B', 'C'};
-  printf("  sizeof(char pointer)    = %d\n", sizeof(charpointer));
-  printf("  sizeof(char array)      = %d\n", sizeof(chararray));
+  printf("  sizeof(char pointer)    = %ld\n", sizeof(charpointer));
+  printf("  sizeof(char array)      = %ld\n", sizeof(chararray));
 
   printf("\nint []: \n");
   int intarray[] = {100, 101, 102, 103, 104};
-  printf("  sizeof(int array)       = %d\n", sizeof(intarray));
+  printf("  sizeof(int array)       = %ld\n", sizeof(intarray));
 
   printf("  1st element address   : %p\n", intarray);
   printf("  2nd element address   : %p\n", intarray + 1);
@@ -73,6 +72,7 @@ int main () {
 
   p = arr;
   incrementPtr(&p);
-  printf("*p = %d\n", *p);
+  printf("  *p = %d\n", *p);
+
   return 0;
 }
