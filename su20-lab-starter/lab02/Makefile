@@ -18,10 +18,14 @@ BIT_OPS_PROG = bit_ops
 LFSR_OBJS = lfsr.o test_lfsr.o
 LFSR_PROG = lfsr
 
+LIST_OBJS=list.o test_list.o
+LIST_PROG=list
+
 VECTOR_OBJS=vector.o vector_test.o
 VECTOR_PROG=vector_test
 
-BINARIES=$(VECTOR_PROG) $(BIT_OPS_PROG) $(LFSR_PROG)
+
+BINARIES=$(VECTOR_PROG) $(BIT_OPS_PROG) $(LFSR_PROG) $(LIST_PROG)
 
 all: $(BINARIES)
 
@@ -31,11 +35,20 @@ $(BIT_OPS_PROG): $(BIT_OPS_OBJS)
 $(LFSR_PROG): $(LFSR_OBJS)
 	$(CC) $(CFLAGS) -g -o $(LFSR_PROG) $(LFSR_OBJS) $(LDFLAGS)
 
+$(LIST_PROG): $(LIST_OBJS)
+	$(CC) $(CFLAGS) -g -o $(LIST_PROG) $(LIST_OBJS) $(LDFLAGS)
+
+$(VECTOR_PROG): $(VECTOR_OBJS)
+	$(CC) $(CFLAGS) -g -o $(VECTOR_PROG) $(VECTOR_OBJS) $(LDFLAGS)
+
 lfsr.c: lfsr.h
 test_lfsr.c: lfsr.h
 
 bit_ops.c: bit_ops.h
 test_bit_ops.c: bit_ops.h
+
+vector.c: vector.h
+vector_test.c: vector.h
 
 .c.o:
 	$(CC) -c $(CFLAGS) $<
@@ -45,6 +58,3 @@ vector-memcheck: $(VECTOR_PROG)
 
 clean:
 	-rm -rf core *.o *~ "#"*"#" Makefile.bak $(BINARIES) *.dSYM
-
-vector.c: vector.h
-vector_test.c: vector.h
