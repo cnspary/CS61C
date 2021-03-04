@@ -22,3 +22,14 @@ main:
 
 factorial:
     # YOUR CODE HERE
+    add t0, x0, a0 # save argument
+    addi a0, x0, 1 # init 1
+loop:
+    beq x0, t0, ret
+    mul a0, a0, t0
+    addi t0, t0, -1
+    j loop
+ret:
+    jr ra
+
+
