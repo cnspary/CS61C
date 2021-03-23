@@ -241,7 +241,6 @@
     <wire from="(700,810)" to="(700,880)"/>
     <wire from="(1350,1520)" to="(1390,1520)"/>
     <wire from="(1520,210)" to="(1560,210)"/>
-    <wire from="(1330,880)" to="(1390,880)"/>
     <wire from="(870,190)" to="(870,220)"/>
     <wire from="(980,1670)" to="(1020,1670)"/>
     <wire from="(800,1480)" to="(800,1500)"/>
@@ -283,6 +282,7 @@
     <wire from="(590,280)" to="(590,310)"/>
     <wire from="(590,70)" to="(590,150)"/>
     <wire from="(1070,480)" to="(1070,490)"/>
+    <wire from="(1350,880)" to="(1400,880)"/>
     <wire from="(550,480)" to="(550,500)"/>
     <wire from="(240,130)" to="(240,160)"/>
     <wire from="(630,480)" to="(630,500)"/>
@@ -296,6 +296,7 @@
     <wire from="(730,1090)" to="(730,1190)"/>
     <wire from="(1190,1220)" to="(1220,1220)"/>
     <wire from="(1320,1120)" to="(1320,1220)"/>
+    <wire from="(1460,880)" to="(1550,880)"/>
     <wire from="(610,780)" to="(810,780)"/>
     <wire from="(810,90)" to="(810,210)"/>
     <wire from="(1740,1660)" to="(1760,1660)"/>
@@ -357,6 +358,7 @@
     <wire from="(810,2390)" to="(810,2510)"/>
     <wire from="(520,170)" to="(600,170)"/>
     <wire from="(200,70)" to="(590,70)"/>
+    <wire from="(1380,920)" to="(1400,920)"/>
     <wire from="(1660,1630)" to="(1690,1630)"/>
     <wire from="(730,1200)" to="(740,1200)"/>
     <comp lib="0" loc="(570,270)" name="Pin">
@@ -774,15 +776,6 @@
       <a name="width" val="5"/>
       <a name="label" val="rs2_input"/>
     </comp>
-    <comp lib="0" loc="(1330,880)" name="Tunnel">
-      <a name="facing" val="east"/>
-      <a name="width" val="32"/>
-      <a name="label" val="INSTRUCTION"/>
-    </comp>
-    <comp lib="0" loc="(1390,880)" name="Tunnel">
-      <a name="width" val="32"/>
-      <a name="label" val="INS_Q"/>
-    </comp>
     <comp lib="0" loc="(1020,1670)" name="Tunnel">
       <a name="width" val="32"/>
       <a name="label" val="rs2_output"/>
@@ -857,6 +850,22 @@
       <a name="output" val="true"/>
       <a name="width" val="32"/>
       <a name="labelloc" val="east"/>
+    </comp>
+    <comp lib="0" loc="(1550,880)" name="Tunnel">
+      <a name="width" val="32"/>
+      <a name="label" val="INS_Q"/>
+    </comp>
+    <comp lib="4" loc="(1400,850)" name="Register">
+      <a name="width" val="32"/>
+    </comp>
+    <comp lib="0" loc="(1380,920)" name="Tunnel">
+      <a name="facing" val="east"/>
+      <a name="label" val="clk"/>
+    </comp>
+    <comp lib="0" loc="(1350,880)" name="Tunnel">
+      <a name="facing" val="east"/>
+      <a name="width" val="32"/>
+      <a name="label" val="INSTRUCTION"/>
     </comp>
   </circuit>
 </project>
