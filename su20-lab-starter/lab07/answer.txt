@@ -1,0 +1,140 @@
+Exercise 1:
+    Scenario 1:
+
+        compute:        
+            step = 8
+            access mode: word (4 bytes)
+            4 bytes * 8 = 32 bytes == Cache size
+
+            access(i) = access(i+1) mod (Cache size)
+
+        1. Because [step size] in bytes is exactly equal to [Cache size] in bytes.
+
+        2. Still 0. Because the step size in bytes doesn't change. Everytime it access the cache, it access the same slot.
+
+        3. because Block size is 8 bytes, so when we miss, we will load 8 bytes, so we can change step size equal 1 (actually, other value may also OK, i.e: 7)
+
+    Scenario 2:
+
+        compute:
+
+            array size in bytes = 256 bytes
+            array size in int = 256 / 4 = 64 
+            step = 2
+
+            1. we need read it then write back, so total 64(Num of Int)) / 2(step) * 2(R & W) = 64
+
+            2/3. each Block (16 bytes), means we can place 4 Index-continuous Intger. i.e:
+
+                Read array[0]: miss
+                Load array[0..3] in Cache Block
+                Write back array[0]: hit
+
+                Read array[0 + 2]: hit
+                Write back array[2] : hit
+
+                so the repeating hit/miss pattern is : Miss Hit Hit Hit
+
+                Hit rate: 3/4
+
+            4. the hit rate will approach to 1 as Rep Count goes to infinity, 
+                when we finish 1st round, all nums in cache, 
+                so in the follow rounds, we will not met Missing Case.
+
+
+            5. for example:
+
+                array = 128 bytes
+                cache = 32 bytes
+                rep count = 1000
+
+                we should do as follow:
+
+                array[0 , 31 bytes]  rep 1000
+                array[32, 63 bytes]  rep 1000
+                array[64, 95 bytes]  rep 1000
+                array[96, 127 bytes] rep 1000
+
+    Scenario 3:
+
+        compute:
+            L1: 
+
+        1. The hit rate of L1 is 50%. The hit rate of L2 is 0%. Overall the hit rate is 50%.
+
+        2. 32 access total. 16 of them miss.
+
+        3. 16 access total. Every time L1 miss, we access L2.
+
+        4. We can increase the block size of L2.
+
+        5. As we slowly increase the number of blocks in L1, the hit rates for L1 and L2 remain the same. 
+           As for L1 block size, the hit rate for L1 increase but for L2 remain the same.
+
+
+
+
+Exercise 2:
+
+    ijk:    n = 1000, 1.652 Gflop/s
+    ikj:    n = 1000, 0.251 Gflop/s  ( WORST )
+    jik:    n = 1000, 1.707 Gflop/s
+    jki:    n = 1000, 11.192 Gflop/s ( BEST )
+    kij:    n = 1000, 0.253 Gflop/s  ( WORST )
+    kji:    n = 1000, 10.396 Gflop/s ( BEST )
+
+    1. jki perform the best. Because the average step size of C, A, B is smallest, which make full use of spatial l    ocality and leads to highest hit rate.
+    2. ikj and kij perform the worst. Because the average step size of C, A, B is largest.
+    3. We should stride as small size as we can.
+
+
+
+Exercise 2:
+
+    part 1:
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 100 20
+        Testing naive transpose: 0.007 milliseconds
+        Testing transpose with blocking: 0.01 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 1000 20
+        Testing naive transpose: 1.33 milliseconds
+        Testing transpose with blocking: 1.004 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 2000 20
+        Testing naive transpose: 15.272 milliseconds
+        Testing transpose with blocking: 3.808 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 5000 20
+        Testing naive transpose: 138.928 milliseconds
+        Testing transpose with blocking: 33.474 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 20
+        Testing naive transpose: 698.901 milliseconds
+        Testing transpose with blocking: 140.461 milliseconds   
+
+
+        1. when n = 1000
+        2. Because the it needs more calculation.
+
+    part 2:
+    
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 50
+        Testing naive transpose: 700.225 milliseconds
+        Testing transpose with blocking: 155.186 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 100
+        Testing naive transpose: 729.25 milliseconds
+        Testing transpose with blocking: 140.136 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 500
+        Testing naive transpose: 714.54 milliseconds
+        Testing transpose with blocking: 170.458 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 1000
+        Testing naive transpose: 697.22 milliseconds
+        Testing transpose with blocking: 197.95 milliseconds
+
+        (base) ➜  lab07 git:(main) ✗ ./transpose 10000 5000
+        Testing naive transpose: 720.473 milliseconds
+        Testing transpose with blocking: 697.933 milliseconds
