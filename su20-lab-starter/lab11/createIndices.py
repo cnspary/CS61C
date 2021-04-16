@@ -1,7 +1,8 @@
 import sys
 import re
 
-from pyspark import SparkContext,SparkConf
+from pyspark import SparkContext, SparkConf
+
 
 def flatMapFunc(document):
     """
@@ -12,7 +13,8 @@ def flatMapFunc(document):
     """
     documentID = document[0]
     words = re.findall(r"\w+", document[1])
-    return words
+    return [(word + ' ' + str(documentID), str(i)) for i, word in enumerate(words)]
+
 
 def mapFunc(arg):
     """
@@ -20,21 +22,25 @@ def mapFunc(arg):
     """
     return (arg, 1)
 
+
 def reduceFunc(arg1, arg2):
     """
     You may need to modify this code.
     """
-    return arg1+arg2
+    return arg1 + ' ' + arg2
+
 
 def createIndices(file_name, output="spark-wc-out-createIndices"):
-    sc = SparkContext("local[8]", "CreateIndices", conf=SparkConf().set("spark.hadoop.validateOutputSpecs", "false"))
+    sc = SparkContext("local[8]", "CreateIndices", conf=SparkConf().set(
+        "spark.hadoop.validateOutputSpecs", "false"))
     file = sc.sequenceFile(file_name)
 
     indices = file.flatMap(flatMapFunc) \
-                 .map(mapFunc) \
-                 .reduceByKey(reduceFunc)
+        .reduceByKey(reduceFunc) \
+        .sortByKey()
 
     indices.coalesce(1).saveAsTextFile(output)
+
 
 """ Do not worry about this """
 if __name__ == "__main__":
