@@ -3,6 +3,20 @@
 
 static PyTypeObject Matrix61cType;
 
+/* Helper functions for initialization of matrices and vectors. */
+
+/*
+ * Return a tuple given rows and cols
+ */
+PyObject *get_shape(int rows, int cols) {
+  if (rows == 1 || cols == 1) {
+    return PyTuple_Pack(1, PyLong_FromLong(rows * cols));
+  } else {
+    return PyTuple_Pack(2, PyLong_FromLong(rows), PyLong_FromLong(cols));
+  }
+}
+
+
 /* Helper functions for initalization of matrices and vectors */
 /* Matrix(rows, cols, low, high). Fill a matrix random double values */
 static int init_rand(PyObject *self, int rows, int cols, unsigned int seed, double low, double high) {
@@ -305,6 +319,14 @@ static PyMappingMethods Matrix61c_mapping = {
 };
 
 /* NUMBER METHODS */
+/* Helper method which creates a Matrix61c struct. */
+Matrix61c *gen_Matrix61c(matrix *result_matrix) {
+    Matrix61c *result_struct = (Matrix61c *) Matrix61c_new(&Matrix61cType, NULL, NULL);
+    result_struct->mat = result_matrix;
+    result_struct->shape = get_shape(result_struct->mat->rows, result_struct->mat->cols);
+
+    return result_struct;
+}
 
 /*
  * Adds two numc.Matrix (Matrix61c) objects together. The first operand is self, and
@@ -314,6 +336,18 @@ static PyMappingMethods Matrix61c_mapping = {
  */
 static PyObject *Matrix61c_add(Matrix61c* self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (args == NULL || !PyObject_TypeCheck(args, &Matrix61cType))
+       PyErr_SetString(PyExc_RuntimeError, "Invalid arguments");
+
+    if (allocate_matrix(&res, self->mat->rows, self->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+
+    if (add_matrix(res, self->mat, ((Matrix61c*)args)->mat))
+       PyErr_SetString(PyExc_RuntimeError, "add_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -324,6 +358,18 @@ static PyObject *Matrix61c_add(Matrix61c* self, PyObject* args) {
  */
 static PyObject *Matrix61c_sub(Matrix61c* self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (args == NULL || !PyObject_TypeCheck(args, &Matrix61cType))
+       PyErr_SetString(PyExc_RuntimeError, "Invalid arguments");
+
+    if (allocate_matrix(&res, self->mat->rows, self->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+
+    if (sub_matrix(res, self->mat, ((Matrix61c*)args)->mat))
+       PyErr_SetString(PyExc_RuntimeError, "sub_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -334,6 +380,18 @@ static PyObject *Matrix61c_sub(Matrix61c* self, PyObject* args) {
  */
 static PyObject *Matrix61c_multiply(Matrix61c* self, PyObject *args) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (args == NULL || !PyObject_TypeCheck(args, &Matrix61cType))
+       PyErr_SetString(PyExc_RuntimeError, "Invalid arguments");
+
+    if (allocate_matrix(&res, self->mat->rows, ((Matrix61c *) args)->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+
+    if (mul_matrix(res, self->mat, ((Matrix61c*)args)->mat))
+       PyErr_SetString(PyExc_RuntimeError, "mul_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -341,6 +399,15 @@ static PyObject *Matrix61c_multiply(Matrix61c* self, PyObject *args) {
  */
 static PyObject *Matrix61c_neg(Matrix61c* self) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (allocate_matrix(&res, self->mat->rows, self->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+
+    if (neg_matrix(res, self->mat))
+       PyErr_SetString(PyExc_RuntimeError, "neg_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -348,6 +415,15 @@ static PyObject *Matrix61c_neg(Matrix61c* self) {
  */
 static PyObject *Matrix61c_abs(Matrix61c *self) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (allocate_matrix(&res, self->mat->rows, self->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+
+    if (abs_matrix(res, self->mat))
+       PyErr_SetString(PyExc_RuntimeError, "abs_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -355,6 +431,18 @@ static PyObject *Matrix61c_abs(Matrix61c *self) {
  */
 static PyObject *Matrix61c_pow(Matrix61c *self, PyObject *pow, PyObject *optional) {
     /* TODO: YOUR CODE HERE */
+    matrix *res = NULL;
+
+    if (pow == NULL || !PyLong_Check(pow))
+       PyErr_SetString(PyExc_RuntimeError, "Invalid arguments");
+
+    if (allocate_matrix(&res, self->mat->rows, self->mat->cols))
+        PyErr_SetString(PyExc_RuntimeError, "Allocation Runtime Error");
+    
+    if (pow_matrix(res, self->mat, PyLong_AsLong(pow)))
+       PyErr_SetString(PyExc_RuntimeError, "pow_matrix Runtime Error");
+
+    return (PyObject*) gen_Matrix61c(res);
 }
 
 /*
@@ -363,6 +451,12 @@ static PyObject *Matrix61c_pow(Matrix61c *self, PyObject *pow, PyObject *optiona
  */
 static PyNumberMethods Matrix61c_as_number = {
     /* TODO: YOUR CODE HERE */
+    .nb_add = (binaryfunc) Matrix61c_add,
+    .nb_subtract = (binaryfunc) Matrix61c_sub,
+    .nb_multiply = (binaryfunc) Matrix61c_multiply,
+    .nb_power = (ternaryfunc) Matrix61c_pow,
+    .nb_negative = (unaryfunc) Matrix61c_neg,
+    .nb_absolute = (unaryfunc) Matrix61c_abs,
 };
 
 
@@ -373,6 +467,19 @@ static PyNumberMethods Matrix61c_as_number = {
  */
 static PyObject *Matrix61c_set_value(Matrix61c *self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    int    row, col;
+    double val;
+
+    if (PyTuple_Check(args) == 0 || PyArg_ParseTuple(args, "iid", &row, &col, &val) == 0) {
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+        return NULL;
+    } else if (row < 0 || row >= self->mat->rows || col < 0 || col >= self->mat->cols) {
+        PyErr_SetString(PyExc_IndexError, "row or column index out of range");
+        return NULL;
+    }
+
+    set(self->mat, row, col, val);
+    return Py_None;
 }
 
 /*
@@ -382,6 +489,17 @@ static PyObject *Matrix61c_set_value(Matrix61c *self, PyObject* args) {
  */
 static PyObject *Matrix61c_get_value(Matrix61c *self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    int row, col;
+
+    if (PyTuple_Check(args) == 0 || PyArg_ParseTuple(args, "ii", &row, &col) == 0) {
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+        return NULL;
+    } else if (row < 0 || row >= self->mat->rows || col < 0 || col >= self->mat->cols) {
+        PyErr_SetString(PyExc_IndexError, "row or column index out of range");
+        return NULL;
+    }
+
+    return (PyObject *)PyFloat_FromDouble(get(self->mat, row, col));
 }
 
 /*
@@ -392,13 +510,14 @@ static PyObject *Matrix61c_get_value(Matrix61c *self, PyObject* args) {
  */
 static PyMethodDef Matrix61c_methods[] = {
     /* TODO: YOUR CODE HERE */
+    {"set", (PyCFunction) &Matrix61c_set_value, METH_VARARGS, ""},
+    {"get", (PyCFunction) &Matrix61c_get_value, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}
 };
 
 /* INSTANCE ATTRIBUTES*/
 static PyMemberDef Matrix61c_members[] = {
-    {"shape", T_OBJECT_EX, offsetof(Matrix61c, shape), 0,
-     "(rows, cols)"},
+    {"shape", T_OBJECT_EX, offsetof(Matrix61c, shape), 0, "(rows, cols)"},
     {NULL}  /* Sentinel */
 };
 

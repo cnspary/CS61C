@@ -113,18 +113,23 @@ void deallocate_matrix(matrix *mat) {
     if (mat == NULL)
         return ;
 
-    if (mat->ref_cnt == 1 && mat->parent == NULL) {
+    if (mat->ref_cnt > 0)
+        mat->ref_cnt -= 1;
+
+
+    if (mat->ref_cnt == 0 && mat->parent == NULL) {
         free(mat->data);
         free(mat);
-    } else if (mat->ref_cnt == 1 && mat->parent != NULL) {
+        return;
+    }
+
+    if (mat->ref_cnt == 0 && mat->parent != NULL) {
         mat->parent->ref_cnt -= 1;
-        if (mat->parent->ref_cnt == 1) {
-            free(mat->parent->data);
-            free(mat->parent);
+        if(mat->parent->ref_cnt == 0) {
+           deallocate_matrix(mat->parent); 
         }
         free(mat);
-    } else if(mat->ref_cnt > 1) {
-        mat->ref_cnt -= 1;
+        return;
     }
 }
 
@@ -215,10 +220,63 @@ int mat_op_helper(matrix *result, matrix *mat1, matrix *mat2, char operation) {
  */
 int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat1, mat2, 1) != 0)
+    if (checker(result, mat1, mat2, 1))
         return -1;
 
+#ifdef OPT
+        int total = result->rows * result->cols;
+        double *res_mat = result->data;
+        double *a_mat = mat1->data;
+        double *b_mat = mat2->data;
+        __m256d d1;
+        __m256d d2;
+        __m256d res1;
+        __m256d res2;
+        __m256d res3;
+        __m256d res4;
+        __m256d res5;
+
+        omp_set_num_threads(16);
+        #pragma omp parallel private(d1, d2, res1, res2, res3, res4, res5)
+        {
+            #pragma omp for
+            for (int i = 0; i < total / 16; i += 16) {
+                d1 = _mm256_loadu_pd(a_mat + i);
+                d2 = _mm256_loadu_pd(b_mat + i);
+                res1 = _mm256_add_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 4);
+                d2 = _mm256_loadu_pd(b_mat + i + 4);
+                res2 = _mm256_add_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 8);
+                d2 = _mm256_loadu_pd(b_mat + i + 8);
+                res3 = _mm256_add_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 12);
+                d2 = _mm256_loadu_pd(b_mat + i + 12);
+                res4 = _mm256_add_pd(d1, d2);
+
+                _mm256_storeu_pd(res_mat + i, res1);
+                _mm256_storeu_pd(res_mat + i + 4, res2);
+                _mm256_storeu_pd(res_mat + i + 8, res3);
+                _mm256_storeu_pd(res_mat + i + 12, res4);
+            }
+
+            for (int i = (total / 16) * 16; i < total; i += 4) {
+                d1 = _mm256_loadu_pd(a_mat + i);
+                d2 = _mm256_loadu_pd(b_mat + i);
+                res5 = _mm256_add_pd(d1, d2);
+                _mm256_storeu_pd(res_mat + i, res5);
+            }
+
+            for (int i = (total / 4) * 4; i < total; ++i) {
+                res_mat[i] = a_mat[i] + b_mat[i];
+            }
+        }
+#else
     mat_op_helper(result, mat1, mat2, '+');
+#endif
 
     return 0;
 }
@@ -229,10 +287,63 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat1, mat2, 1) != 0)
+    if (checker(result, mat1, mat2, 1))
         return -1;
 
+#ifdef OPT
+        int total = result->rows * result->cols;
+        double *res_mat = result->data;
+        double *a_mat = mat1->data;
+        double *b_mat = mat2->data;
+        __m256d d1;
+        __m256d d2;
+        __m256d res1;
+        __m256d res2;
+        __m256d res3;
+        __m256d res4;
+        __m256d res5;
+
+        omp_set_num_threads(16);
+        #pragma omp parallel private(d1, d2, res1, res2, res3, res4, res5)
+        {
+            #pragma omp for
+            for (int i = 0; i < total / 16; i += 16) {
+                d1 = _mm256_loadu_pd(a_mat + i);
+                d2 = _mm256_loadu_pd(b_mat + i);
+                res1 = _mm256_sub_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 4);
+                d2 = _mm256_loadu_pd(b_mat + i + 4);
+                res2 = _mm256_sub_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 8);
+                d2 = _mm256_loadu_pd(b_mat + i + 8);
+                res3 = _mm256_sub_pd(d1, d2);
+
+                d1 = _mm256_loadu_pd(a_mat + i + 12);
+                d2 = _mm256_loadu_pd(b_mat + i + 12);
+                res4 = _mm256_sub_pd(d1, d2);
+
+                _mm256_storeu_pd(res_mat + i, res1);
+                _mm256_storeu_pd(res_mat + i + 4, res2);
+                _mm256_storeu_pd(res_mat + i + 8, res3);
+                _mm256_storeu_pd(res_mat + i + 12, res4);
+            }
+
+            for (int i = (total / 16) * 16; i < total; i += 4) {
+                d1 = _mm256_loadu_pd(a_mat + i);
+                d2 = _mm256_loadu_pd(b_mat + i);
+                res5 = _mm256_sub_pd(d1, d2);
+                _mm256_storeu_pd(res_mat + i, res5);
+            }
+
+            for (int i = (total / 4) * 4; i < total; ++i) {
+                res_mat[i] = a_mat[i] - b_mat[i];
+            }
+        }
+#else
     mat_op_helper(result, mat1, mat2, '-');
+#endif
 
     return 0;
 }
@@ -244,9 +355,27 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat1, mat2, 0) != 0)
+    if (checker(result, mat1, mat2, 0))
         return -1;  
 
+#ifdef OPT
+    mat_op_helper(result, mat1, mat2, 'z');
+    
+    for (int i = 0; i < result->rows; ++i) {
+        for (int j = 0; j < result->cols; ++j) {
+            double global_sum = 0.0;
+
+            #pragma omp parallel reduction(+:global_sum)
+            {
+                #pragma omp for
+                for (int k = 0; k < mat1->cols; k++) {
+                    global_sum += (get(mat1, i, k) * get(mat2, k, j));
+                }
+            }
+            set(result, i, j, global_sum);
+        }
+    }
+#else
     mat_op_helper(result, mat1, mat2, 'z');
     
     for(int i = 0; i < result->rows; ++i)
@@ -254,7 +383,8 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
             for(int k = 0; k < mat1->cols; ++k) {
                 set(result, i, j, get(result, i, j) + get(mat1, i, k) * get(mat2, k, j));
             }
-    
+#endif
+
     return 0;
 }
 
@@ -265,13 +395,13 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  */
 int pow_matrix(matrix *result, matrix *mat, int pow) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat, mat, 0) != 0)
+    if (checker(result, mat, mat, 0))
         return -1;  
 
     if (mat->rows != mat->cols)
         return -1;
 
-    matrix *tmp;
+    matrix *tmp, *pow2;
 
     if (pow == 0) {
         return mat_op_helper(result, mat, mat, 'I');
@@ -280,17 +410,20 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
     } else {
         mat_op_helper(result, mat, mat, 'I');
 
-        if (allocate_matrix(&tmp, result->rows, result->cols) != 0)
+        if (allocate_matrix(&tmp, result->rows, result->cols))
+            return -1;
+        if (allocate_matrix(&pow2, result->rows, result->cols))
             return -1;
 
-        for (int i = 0; i < pow; ++i) {
-            
-            if (mul_matrix(tmp, result, mat) != 0)
-                return -1;
+        mul_matrix(pow2, mat, mat);
+        pow_matrix(tmp, pow2, pow / 2);
 
+        if (pow % 2 == 1)
+            mul_matrix(result, tmp, mat);
+        else
             mat_op_helper(result, tmp, tmp, 's');
-        }
 
+        deallocate_matrix(pow2);
         deallocate_matrix(tmp);
     }
 
@@ -303,10 +436,56 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
  */
 int neg_matrix(matrix *result, matrix *mat) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat, mat, 0) != 0)
+    if (checker(result, mat, mat, 0))
         return -1;
+#ifdef OPT
+        int total = result->rows * result->cols;
+        double *res_mat = result->data;
+        double *a_mat = mat->data;
+        __m256d d1 = _mm256_setzero_pd();
+        __m256d d2;
+        __m256d res1;
+        __m256d res2;
+        __m256d res3;
+        __m256d res4;
+        __m256d res5;
 
+        omp_set_num_threads(16);
+        #pragma omp parallel private(d2, res1, res2, res3, res4, res5)
+        {
+            #pragma omp for
+            for (int i = 0; i < total / 16; i += 16) {
+                d2 = _mm256_loadu_pd(a_mat + i);
+                res1 = _mm256_sub_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 4);
+                res2 = _mm256_sub_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 8);
+                res3 = _mm256_sub_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 12);
+                res4 = _mm256_sub_pd(d1, d2);
+
+                _mm256_storeu_pd(res_mat + i, res1);
+                _mm256_storeu_pd(res_mat + i + 4, res2);
+                _mm256_storeu_pd(res_mat + i + 8, res3);
+                _mm256_storeu_pd(res_mat + i + 12, res4);
+            }
+
+            for (int i = (total / 16) * 16; i < total; i += 4) {
+                d2 = _mm256_loadu_pd(a_mat + i);
+                res5 = _mm256_sub_pd(d1, d2);
+                _mm256_storeu_pd(res_mat + i, res5);
+            }
+
+            for (int i = (total / 4) * 4; i < total; ++i) {
+                res_mat[i] = 0.0 - a_mat[i];
+            }
+        };
+#else
     mat_op_helper(result, mat, mat, 'n');
+#endif
 
     return 0;
 }
@@ -317,10 +496,56 @@ int neg_matrix(matrix *result, matrix *mat) {
  */
 int abs_matrix(matrix *result, matrix *mat) {
     /* TODO: YOUR CODE HERE */
-    if (checker(result, mat, mat, 0) != 0)
+    if (checker(result, mat, mat, 0))
         return -1;
+#ifdef OPT
+int total = result->rows * result->cols;
+        double *res_mat = result->data;
+        double *a_mat = mat->data;
+        __m256d d1 = _mm256_set1_pd(-0.0f);
+        __m256d d2;
+        __m256d res1;
+        __m256d res2;
+        __m256d res3;
+        __m256d res4;
+        __m256d res5;
 
+        omp_set_num_threads(16);
+        #pragma omp parallel private(d2, res1, res2, res3, res4, res5)
+        {
+            #pragma omp for
+            for (int i = 0; i < total / 16; i += 16) {
+                d2 = _mm256_loadu_pd(a_mat + i);
+                res1 = _mm256_andnot_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 4);
+                res2 = _mm256_andnot_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 8);
+                res3 = _mm256_andnot_pd(d1, d2);
+
+                d2 = _mm256_loadu_pd(a_mat + i + 12);
+                res4 = _mm256_andnot_pd(d1, d2);
+
+                _mm256_storeu_pd(res_mat + i, res1);
+                _mm256_storeu_pd(res_mat + i + 4, res2);
+                _mm256_storeu_pd(res_mat + i + 8, res3);
+                _mm256_storeu_pd(res_mat + i + 12, res4);
+            }
+
+            for (int i = (total / 16) * 16; i < total; i += 4) {
+                d2 = _mm256_loadu_pd(a_mat + i);
+                res5 = _mm256_andnot_pd(d1, d2);
+                _mm256_storeu_pd(res_mat + i, res5);
+            }
+
+            for (int i = (total / 4) * 4; i < total; ++i) {
+                res_mat[i] = a_mat[i] >= 0 ? a_mat[i] : -a_mat[i];
+            }
+        };
+#else
     mat_op_helper(result, mat, mat, 'a');
+#endif
 
     return 0; 
 }
